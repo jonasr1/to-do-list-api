@@ -16,19 +16,14 @@ class RegisterView(APIView):
 class UserView(APIView):
     permission_classes = [IsAuthenticated] # Garante que a requisição precise de autenticação
     def get(self, request: Request) -> Response:
-        user = request.user  # O usuário é automaticamente extraído da requisição pelo SimpleJWT
+        serializer = UserSerializer(request.user)  # Serializa o usuário autenticado
         return Response({
-            'user': {
-                'user_id': user.id,
-                'username': user.username,
-                'is_active': user.is_active,
-            },
+            'user':serializer.data,
             'token': {
-                'token_type': request.auth['token_type'],
                 'exp': self.convert_timestamp(request.auth['exp']),
                 'iat': self.convert_timestamp(request.auth['iat'])
             }
-        })
+            })
         
     def convert_timestamp(self, timestamp:float):
         return datetime.fromtimestamp(timestamp=timestamp, tz=timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
