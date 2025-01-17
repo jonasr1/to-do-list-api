@@ -4,14 +4,16 @@ from django.db import IntegrityError
 from django.test import TestCase
 
 from tasks.models import Task
+from users.models import User
 
 class TaskModelTest(TestCase):
     def setUp(self):
+        self.user_valid = User.objects.create_user(username='João', password='João123')
         self.example_task = Task.objects.create(
-            title='Example Task', description='Task description'
+            title='Example Task', description='Task description', user=self.user_valid
         )
         self.other_task = Task.objects.create(
-            title='Other Task'
+            title='Other Task', user=self.user_valid
         )
 
     def test_title_empty_validation(self):
@@ -39,7 +41,7 @@ class TaskModelTest(TestCase):
     
     def test_long_description(self):
         long_description = "a" * 1000
-        task = Task.objects.create(title="Valid Title", description=long_description)
+        task = Task.objects.create(title="Valid Title", description=long_description, user=self.user_valid)
         self.assertEqual(task.description, long_description)
     
     def test_task_valid(self):
