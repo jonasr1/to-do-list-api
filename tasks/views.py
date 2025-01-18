@@ -1,4 +1,5 @@
-from typing import cast
+from .pagination import TaskPagination
+from rest_framework.filters import OrderingFilter
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from tasks.filters import TaskFilter
@@ -10,6 +11,8 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action
 from rest_framework.request import Request
 from rest_framework.response import Response
+from django.db.models import Count, Q
+
 
 class TaskViewSet(viewsets.ModelViewSet):
     """
@@ -26,27 +29,43 @@ class TaskViewSet(viewsets.ModelViewSet):
     - GET /tasks?status=completed will return only completed tasks.
     - GET /tasks?status=pending will return only pending tasks.
     - GET /tasks?status=all will return all tasks, regardless of their completion status.
+    
+    Sorting:
+    - You can sort the tasks by 'createdAt' or 'title' using the 'ordering' query parameter in the URL.
+    - GET /tasks?ordering=created_at|title
+    
+    Pagination:
+    - The results are paginated by default, returning 10 items per page.
+    - You can adjust the number of items per page using the 'page_size' query parameter:
+    - GET /tasks?page_size=20
+    - The maximum allowed value for 'page_size' is 100.
     """
-    queryset = Task.objects.all()
     serializer_class = TaskSerializer
     permission_classes = [IsAuthenticated]
-    filter_backends = [DjangoFilterBackend] # DjangoFilterBackend allows you to filter query results based on query parameters passed in the URL.
+    filter_backends = [DjangoFilterBackend, OrderingFilter] # DjangoFilterBackend allows you to filter query results based on query parameters passed in the URL.
     filterset_class = TaskFilter # Here, it is configured to allow filtering by the 'is_completed' field
-    
+    ordering_fields = ['created_at', 'title']
+    ordering = ['-created_at']
+    pagination_class = TaskPagination
+
     @action(detail=False, url_path='stats')
     def get_task_stats(self, request: Request) -> Response:
         user = request.user
-        total_tasks = Task.objects.filter(user=user).count()
-        completed_tasks = Task.objects.filter(user=user, is_completed=True).count()
+        stats = Task.objects.filter(user=user).aggregate(
+            total_tasks=Count('id'),
+            completed_tasks=Count('id', filter=Q(is_completed=True)),
+        )
+        total_tasks = stats['total_tasks']
+        completed_tasks = stats['completed_tasks']
         pending_tasks = total_tasks - completed_tasks
         completion_percentage = (completed_tasks / total_tasks * 100) if total_tasks > 0 else 0
-        stats = {
+        result = {
             'total_tasks': total_tasks,
             'completed_tasks': completed_tasks,
             'pending_tasks': pending_tasks,
-            'completion_percentage': completion_percentage
+            'completion_percentage': f'{completion_percentage}%' if completion_percentage!=0 else f'0%'
         }
-        return Response(stats)
+        return Response(result)
     
     def get_queryset(self):
         return Task.objects.filter(user=self.request.user)
