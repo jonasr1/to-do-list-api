@@ -10,6 +10,7 @@ class Task(TimeStampedModel):
     description = models.TextField(blank=True, default='')
     is_completed = models.BooleanField(default=False)
     user = models.ForeignKey(User, related_name='tasks', on_delete=models.CASCADE)
+    latest_version = models.PositiveIntegerField(default=0)
     
     def clean(self) -> None:
         super().clean()

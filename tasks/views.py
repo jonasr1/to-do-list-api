@@ -1,4 +1,6 @@
-from .pagination import TaskPagination
+from tasks.models_history import TaskHistory
+from tasks.serializers_history import TaskHistorySerializer
+from tasks.pagination import TaskPagination
 from rest_framework.filters import OrderingFilter
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
@@ -67,7 +69,7 @@ class TaskViewSet(viewsets.ModelViewSet):
         }
         return Response(result)
     
-    def get_queryset(self):
+    def get_queryset(self): # type: ignore
         return Task.objects.filter(user=self.request.user)
     
     def perform_create(self, serializer): # type: ignore
@@ -76,3 +78,22 @@ class TaskViewSet(viewsets.ModelViewSet):
         if Task.objects.filter(title=title, user=user).exists():
             raise ValidationError({'title': ['A task with this title already exists for the user.']})
         serializer.save(user=user)
+
+
+class TaskHistoryViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    ViewSet to manage task history.
+    Supports:
+    - List all task history entries (GET /task-history)
+    - List history entries for a specific task(GET /task-history?task=<task_id>)
+    """
+    queryset = TaskHistory.objects.all()
+    serializer_class = TaskHistorySerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self): # type: ignore
+        task_id = self.request.GET.get('task', None)
+        if task_id:
+            return TaskHistory.objects.filter(task_id=task_id, task__user=self.request.user)
+        return TaskHistory.objects.filter(task__user=self.request.user)
+    
