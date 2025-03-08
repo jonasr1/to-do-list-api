@@ -1,3 +1,5 @@
+from collections import Counter
+from datetime import timedelta
 from tasks.models_history import TaskHistory
 from tasks.serializers_history import TaskHistorySerializer
 from tasks.pagination import TaskPagination
@@ -7,13 +9,14 @@ from rest_framework.permissions import IsAuthenticated
 from tasks.filters import TaskFilter
 from tasks.models import Task
 from tasks.serializers import TaskSerializer
-from rest_framework.request import Request
 from rest_framework.exceptions import ValidationError
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action
 from rest_framework.request import Request
 from rest_framework.response import Response
 from django.db.models import Count, Q
+from http import HTTPStatus
+from django.utils.timezone import now
 
 
 class TaskViewSet(viewsets.ModelViewSet):
@@ -33,8 +36,11 @@ class TaskViewSet(viewsets.ModelViewSet):
     - GET /tasks?status=all will return all tasks, regardless of their completion status.
     
     Sorting:
-    - You can sort the tasks by 'createdAt' or 'title' using the 'ordering' query parameter in the URL.
-    - GET /tasks?ordering=created_at|title
+    - Sort by 'created_at' or 'title' using 'ordering':
+        - GET /tasks?ordering=created_at
+        - GET /tasks?ordering=-created_at
+        - GET /tasks?ordering=title
+        - GET /tasks?ordering=-title
     
     Pagination:
     - The results are paginated by default, returning 10 items per page.
@@ -65,9 +71,46 @@ class TaskViewSet(viewsets.ModelViewSet):
             'total_tasks': total_tasks,
             'completed_tasks': completed_tasks,
             'pending_tasks': pending_tasks,
-            'completion_percentage': f'{completion_percentage}%' if completion_percentage!=0 else f'0%'
+            'completion_percentage': f'{completion_percentage:.2f}%' if completion_percentage!=0 else '0%'
         }
         return Response(result)
+    
+    @action(detail=False, url_path='metrics')
+    def task_metrics(self, request: Request) -> Response:
+        """
+        Retrieve task creation statistics over a period of time.
+
+        Query Parameters:
+        - days (optional, default=7): Number of past days to consider.
+        
+        Example Request:
+        GET /tasks/metrics?days=14
+
+        Response format:
+        {
+            "days": 7,
+            "task_distribution": {
+                "10/02/2025": 3,
+                "11/02/2025": 5,
+                "12/02/2025": 2
+            }
+        }
+        """
+        try:
+            days = int(request.query_params.get('days', 7))
+            if days < 1:
+                return Response({'error': '"days" parameter must be greater than 0'}, status=HTTPStatus.BAD_REQUEST)
+        except ValueError:
+            return Response({'error': 'Invalid days parameter'}, status=HTTPStatus.BAD_REQUEST)
+        start_date = now() - timedelta(days=days)
+        tasks = Task.objects.filter(user=request.user, created_at__gte=start_date)
+        task_count_by_day = Counter(task.created_at.date().strftime('%d/%m/%Y') for task in tasks)
+        ordered_metrics = dict(sorted(task_count_by_day.items()))
+        return Response({
+            'days': days,
+            'task_distribution': ordered_metrics
+        }, status=HTTPStatus.OK)
+        
     
     def get_queryset(self): # type: ignore
         return Task.objects.filter(user=self.request.user)
