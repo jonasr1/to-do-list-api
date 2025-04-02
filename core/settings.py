@@ -94,6 +94,16 @@ DATABASES = {
     },
 }
 
+# Redis Caches
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": f"redis://{config('REDIS_HOST', default='127.0.0.1')}:{config('REDIS_PORT', default=6379)}/{config('REDIS_DB', default=1)}",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
+}
 
 SIMPLE_JWT = {
     'ALGORITHM': config('JWT_ALGORITHM', default='HS256'),
