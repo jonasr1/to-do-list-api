@@ -1,8 +1,9 @@
 from django.apps import AppConfig
 
+
 class TasksConfig(AppConfig):
-    default_auto_field = 'django.db.models.BigAutoField'
-    name = 'tasks'
+    default_auto_field = "django.db.models.BigAutoField"
+    name = "tasks"
 
     def ready(self):
-        import tasks.signals # type: ignore
+        from . import signals  # type: ignore # noqa: F401
