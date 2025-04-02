@@ -16,3 +16,12 @@ class TaskSerializer(serializers.ModelSerializer):
             'id': obj.user.id,
             'username': obj.user.username
         }
+
+    def validate_title(self, title: str) -> str:
+        '''Validates if the title already exists for the user.'''
+        user = self.context['request'].user
+        task_id = self.instance.id if self.instance else None
+        if Task.objects.filter(user=user, title=title).exclude(id=task_id).exists():
+            raise serializers.ValidationError('A task with this title already exists for this user.')
+        return title
+    
