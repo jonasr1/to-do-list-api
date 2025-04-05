@@ -52,6 +52,10 @@ class TaskViewSet(viewsets.ModelViewSet):
     - You can adjust the number of items per page using the 'page_size' query parameter:
     - GET /tasks?page_size=20
     - The maximum allowed value for 'page_size' is 100.
+
+    Additional Endpoints:
+    - GET /tasks/stats/ → Retrieves task statistics (total, completed, pending, completion rate).
+    - GET /tasks/metrics/?days=<n> → Retrieves the number of tasks created over the last `n` days.
     """
 
     serializer_class = TaskSerializer
