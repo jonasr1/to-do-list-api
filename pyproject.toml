@@ -15,6 +15,7 @@ djangorestframework-simplejwt = "^5.3.1"
 django-filter = "^24.3"
 redis = {extras = ["hiredis"], version = "^5.2.1"}
 django-redis = "^5.4.0"
+gunicorn = "^23.0.0"
 
 
 [build-system]
