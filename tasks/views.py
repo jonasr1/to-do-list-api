@@ -147,10 +147,6 @@ class TaskViewSet(viewsets.ModelViewSet):
         cache_key = f"user_{self.request.user.id}_tasks"  # type: ignore # Unique key for each user
         if task_ids := cache.get(cache_key):
             return Task.objects.filter(id__in=task_ids)
-        
-        print("Simulando o atraso")
-        import time
-        time.sleep(2)  # Simulating time-consuming processing
         queryset = Task.objects.filter(user=self.request.user)
         cache.set(
             cache_key, list(queryset.values_list("id", flat=True)), timeout=300

@@ -91,6 +91,9 @@ DATABASES = {
         'PASSWORD': config('DB_PASSWORD', default=''),
         'HOST': config('DB_HOST', default='localhost'),
         'PORT': config('DB_PORT', default='5432'),
+        'OPTIONS': {
+            'sslmode': 'require',
+        },
     },
 }
 
@@ -98,9 +101,10 @@ DATABASES = {
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": f"redis://{config('REDIS_HOST', default='127.0.0.1')}:{config('REDIS_PORT', default=6379)}/{config('REDIS_DB', default=1)}",
+        "LOCATION": f"rediss://default:{config('REDIS_PASSWORD', default='127.0.0.1')}@{config('REDIS_HOST')}:{config('REDIS_PORT', default=6379)}",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "SSL": True
         }
     }
 }
