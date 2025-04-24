@@ -14,6 +14,12 @@
   - [Exemplos de Requisições no Postman - Tasks](#-exemplos-de-requisições-via-postman---tasks)
   - [Decisões Técnicas do Projeto](#-decisões-técnicas-do-projeto)
 
+## 🔗 Deploy
+
+A aplicação está disponível em produção no seguinte endereço:
+
+➡️ [todo-list](https://senior-harri-jonasr1-8e5f5411.koyeb.app/health/)
+
 ## Requisitos  
 
 Antes de rodar o projeto, certifique-se de que os seguintes itens estão instalados:
@@ -94,7 +100,7 @@ Se tudo estiver funcionando, o retorno será:
 
 ## 3. Como executar o projeto
 
-1. Instalar as dependências do projeto:
+### Instalar as dependências do projeto
 
 Dentro da pasta do projeto, execute o seguinte comando para instalar todas as dependências listadas no arquivo pyproject.toml:
 
@@ -104,17 +110,15 @@ poetry install
 
 O Poetry irá criar um ambiente virtual e instalar todas as dependências listadas no pyproject.toml.
 
-2 Aplicar as migrações do banco de dados:
+### Aplicar as migrações do banco de dados
 
 ```bash
 poetry run python manage.py migrate
 ```
 
-3 Ativar o ambiente virtual (opcional):
+### Ativar o ambiente virtual (Recomendado)
 
 Embora o Poetry gerencie o ambiente automaticamente ao executar os comandos, você pode ativá-lo manualmente com:
-
-Após instalar as dependências, você pode ativar o ambiente virtual com o comando:
 
 ```bash
 poetry shell
@@ -157,7 +161,7 @@ poetry env info --path
 | POST   | `/tasks/`                    | Criar uma nova tarefa                                                                             |
 | GET    | `/tasks/`                    | Listar tarefas com filtros, ordenação e paginação                                                 |
 | GET    | `/tasks/?page_size=n&page=m` | Paginação das tarefas (`n` por página, `m` página)                                                |
-| GET    | `/tasks?status={{status}}`   | Filtrar tarefas pelo status usando o parâmetro de consulta 'status' (completed \| pending \| all) |
+| GET    | `/tasks?status=<status>`   | Filtrar tarefas pelo status usando o parâmetro de consulta 'status' (completed \| pending \| all) |
 | PUT    | `/tasks/:id/`                | Atualizar uma tarefa inteira                                                                      |
 | PATCH  | `/tasks/:id/`                | Marcar/desmarcar tarefa como concluída                                                            |
 | DEL    | `/tasks/:id/`                | Excluir uma tarefa                                                                                |
@@ -187,8 +191,8 @@ poetry env info --path
 
 ```json
 {
-"username": "{{USERNAME}}",
-"password": "{{PASSWORD}}"
+"username": "<USERNAME>",
+"password": "<PASSWORD>"
 }
 ```
 
@@ -212,7 +216,7 @@ poetry env info --path
 
 ```http
 GET /users/me/
-{Authorization: Bearer <access_token>
+{Authorization: Bearer <access_token>}
 ```
 
 ### 📬 Exemplos de Requisições via Postman - Tasks
